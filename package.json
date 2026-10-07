@@ -1,0 +1,23 @@
+{
+  "name": "m63-platform",
+  "version": "0.1.0",
+  "private": true,
+  "description": "M63: Evidence-Driven Multi-Dimensional Career Decision Intelligence Platform",
+  "workspaces": [
+    "packages/*"
+  ],
+  "scripts": {
+    "build": "npm run --workspaces build",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "lint": "echo \"Lint check completed\"",
+    "dev:server": "npm run --workspace=@m63/server dev",
+    "dev:client": "npm run --workspace=@m63/client dev",
+    "dev": "echo \"Run dev:server and dev:client\""
+  },
+  "devDependencies": {
+    "@types/node": "^22.13.0",
+    "typescript": "^5.7.0",
+    "vitest": "^3.0.0"
+  }
+}

@@ -1,0 +1,399 @@
+// M63 Database Schema (Prisma)
+// Supports SQLite for fast zero-friction hackathon dev and PostgreSQL for staging/production
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+// ----------------------------------------------------
+// Authentication & Consent
+// ----------------------------------------------------
+
+model User {
+  id           String         @id @default(uuid())
+  email        String         @unique
+  passwordHash String
+  role         String         // STUDENT | PARENT | COUNSELOR | ADMIN
+  isActive     Boolean        @default(true)
+  createdAt    DateTime       @default(now())
+  updatedAt    DateTime       @updatedAt
+
+  studentProfile StudentProfile?
+  parentProfile  ParentProfile?
+  minorConsents  MinorConsent[]
+
+  @@map("users")
+}
+
+model MinorConsent {
+  id                  String    @id @default(uuid())
+  studentUserId       String
+  guardianName        String
+  guardianEmail       String
+  guardianPhone       String?
+  consentGranted      Boolean   @default(false)
+  consentGrantedAt    DateTime?
+  consentPolicyVersion String
+  ipAddress           String?
+  createdAt           DateTime  @default(now())
+
+  user User @relation(fields: [studentUserId], references: [id], onDelete: Cascade)
+
+  @@map("minor_consents")
+}
+
+// ----------------------------------------------------
+// Geographic & Organization Foundations
+// ----------------------------------------------------
+
+model Location {
+  id        String   @id @default(uuid())
+  country   String
+  region    String?  // State / Province
+  city      String?
+  latitude  Float?
+  longitude Float?
+
+  opportunities        Opportunity[]
+  hyperlocalOpportunities HyperLocalOpportunity[]
+
+  @@map("locations")
+}
+
+model Company {
+  id                  String   @id @default(uuid())
+  name                String   @unique
+  industry            String?
+  websiteUrl          String?
+  officialCareersUrl  String?
+  contactType         String?  // OFFICIAL_CAREERS_PORTAL | CAMPUS_RELATIONS | GENERAL_INQUIRY
+  verifiedContactInfo String?
+  createdAt           DateTime @default(now())
+
+  opportunities Opportunity[]
+
+  @@map("companies")
+}
+
+model Institution {
+  id                 String   @id @default(uuid())
+  name               String
+  country            String
+  city               String?
+  accreditationRating String?
+  officialWebsiteUrl String
+  createdAt          DateTime @default(now())
+
+  educationPrograms EducationProgram[]
+
+  @@map("institutions")
+}
+
+// ----------------------------------------------------
+// Evidence & Provenance
+// ----------------------------------------------------
+
+model Source {
+  id               String   @id @default(uuid())
+  name             String
+  baseUrl          String
+  sourceType       String   // OFFICIAL_GOVERNMENT | INDUSTRY_CONSORTIUM | ACADEMIC_INSTITUTE | DIRECT_PORTAL
+  reliabilityRating Float   @default(0.8)
+  createdAt        DateTime @default(now())
+
+  evidenceRecords EvidenceRecord[]
+
+  @@map("sources")
+}
+
+model EvidenceRecord {
+  id             String    @id @default(uuid())
+  sourceId       String
+  fieldName      String
+  rawValue       String    // Stored as JSON/Text
+  parsedValue    String?   // JSON representation
+  sourceUrl      String?   // Direct link for user fallback verification
+  evidenceStatus String    // VERIFIED | PARTIAL | EXTERNAL | INSUFFICIENT
+  evidenceLevel  String    // OFFICIAL_SOURCE | EXTERNALLY_VERIFIED | ASSESSMENT | PROJECT_EVIDENCE | CERTIFICATE | SELF_DECLARED
+  publishedAt    DateTime?
+  retrievedAt    DateTime  @default(now())
+  geographyCountry String
+  geographyRegion  String?
+  method         String    // API_INGESTION | VERIFIED_SCRAPE | AUDITED_DATASET
+  coverage       Float     @default(1.0)
+  confidence     Float     @default(0.8)
+
+  source Source @relation(fields: [sourceId], references: [id])
+  marketMetrics MarketMetric[]
+  studentSkills StudentSkill[]
+  hyperlocalOpportunities HyperLocalOpportunity[]
+
+  @@map("evidence_records")
+}
+
+// ----------------------------------------------------
+// Student & Parent Intelligence Models
+// ----------------------------------------------------
+
+model StudentProfile {
+  id                 String   @id @default(uuid())
+  userId             String   @unique
+  dateOfBirth        DateTime
+  age                Int
+  educationLevel     String   // SCHOOL_SECONDARY | SCHOOL_HIGHER_SECONDARY | COLLEGE_UNDERGRAD | COLLEGE_POSTGRAD
+  classOrYear        String
+  academicStream     String   // SCIENCE_PCM | COMMERCE | ARTS | ENGINEERING | etc.
+  preferredLanguage  String   @default("en")
+  academicData       String   // JSON: subjects, performance, trends
+  aptitudeData       String   // JSON: assessed aptitude dimensions
+  riasecScores       String   // JSON: { realistic, investigative, artistic, social, enterprising, conventional }
+  workPreferences    String   // JSON: analytical vs creative, solo vs team, etc.
+  aspirations        String   // JSON: dream career, government preference, priority ranking
+  riskAndMobility    String   // JSON: relocation, risk tolerance, loan willingness
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+
+  user               User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  skills             StudentSkill[]
+  assessments        Assessment[]
+  recommendations    Recommendation[]
+  whatIfScenarios    WhatIfScenario[]
+
+  @@map("student_profiles")
+}
+
+model StudentSkill {
+  id               String   @id @default(uuid())
+  studentId        String
+  name             String
+  category         String   // TECHNICAL | COGNITIVE | COMMUNICATION | CREATIVE
+  proficiency      Int      // 0 - 100
+  evidenceLevel    String   // CLAIMED | EVIDENCE_BACKED | ASSESSED | EXTERNALLY_VERIFIED
+  evidenceRecordId String?
+  credentialUrl    String?
+
+  student        StudentProfile  @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  evidenceRecord EvidenceRecord? @relation(fields: [evidenceRecordId], references: [id])
+
+  @@map("student_skills")
+}
+
+model ParentProfile {
+  id                    String   @id @default(uuid())
+  userId                String   @unique
+  linkedStudentId       String
+  relationship          String   // FATHER | MOTHER | LEGAL_GUARDIAN
+  annualIncomeRange     String
+  dependentsCount       Int      @default(1)
+  maxTotalBudget        Float    // Hard budget limit
+  maxAnnualExpense      Float
+  loanWillingness       Boolean  @default(false)
+  maxLoanTolerance      Float    @default(0.0)
+  riskProfile           String   // CONSERVATIVE | MODERATE | HIGH
+  sectorPreference      String   // GOVERNMENT_ONLY | STABLE_PRIVATE | etc.
+  geographicMobility    String   // SAME_CITY | SAME_STATE | DOMESTIC | INTERNATIONAL
+  expectedTimeToIncome  String   // 1_TO_2_YEARS | 3_TO_4_YEARS | etc.
+  nonFinancialConstraints String // JSON: family responsibilities, restrictions
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("parent_profiles")
+}
+
+// ----------------------------------------------------
+// Adaptive Assessments
+// ----------------------------------------------------
+
+model Assessment {
+  id           String   @id @default(uuid())
+  studentId    String
+  category     String   // RIASEC_INTEREST | COGNITIVE_APTITUDE | WORK_STYLE
+  isCompleted  Boolean  @default(false)
+  currentEstimates String // JSON
+  confidenceScore Float @default(0.0)
+  createdAt    DateTime @default(now())
+  completedAt  DateTime?
+
+  student   StudentProfile       @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  responses AssessmentResponse[]
+
+  @@map("assessments")
+}
+
+model AssessmentResponse {
+  id             String   @id @default(uuid())
+  assessmentId   String
+  questionId     String
+  selectedOptionId String
+  responseTimeMs Int?
+  createdAt      DateTime @default(now())
+
+  assessment Assessment @relation(fields: [assessmentId], references: [id], onDelete: Cascade)
+
+  @@map("assessment_responses")
+}
+
+// ----------------------------------------------------
+// Opportunities & Market Metrics
+// ----------------------------------------------------
+
+model Opportunity {
+  id                  String   @id @default(uuid())
+  title               String
+  taxonomyCode        String?  // NCO-2015 or O*NET SOC normalization skeleton
+  roleCategory        String
+  description         String
+  companyId           String?
+  locationId          String?
+  workModel           String   // ONSITE | HYBRID | REMOTE
+  salaryMin           Float?   // NULL if unknown, NEVER 0
+  salaryMax           Float?   // NULL if unknown
+  salaryCurrency      String   @default("INR")
+  salaryIsVerified    Boolean  @default(false)
+  educationStage      String   // Stage required
+  riasecProfile       String   // JSON: Holland vector derived from evidence
+  opportunityVector   String   // JSON: Skill & cognitive requirement vectors
+  externalVerificationUrl String // Direct verification link
+  isHyperLocal        Boolean  @default(false)
+  createdAt           DateTime @default(now())
+
+  company         Company?         @relation(fields: [companyId], references: [id])
+  location        Location?        @relation(fields: [locationId], references: [id])
+  marketMetrics   MarketMetric[]
+  recommendations Recommendation[]
+
+  @@map("opportunities")
+}
+
+model MarketMetric {
+  id                 String   @id @default(uuid())
+  opportunityId      String?
+  taxonomyCode       String?
+  demandIndex        Float?
+  demandForecast     String?  // GROWING | STABLE | DECLINING | UNKNOWN
+  jobVelocity        Float?
+  economicDisruption Float?
+  socioMobilityScore Float?
+  evidenceRecordId   String
+  lastUpdated        DateTime @default(now())
+
+  opportunity    Opportunity?   @relation(fields: [opportunityId], references: [id])
+  evidenceRecord EvidenceRecord @relation(fields: [evidenceRecordId], references: [id])
+
+  @@map("market_metrics")
+}
+
+// ----------------------------------------------------
+// Education Programs & Scholarships
+// ----------------------------------------------------
+
+model EducationProgram {
+  id              String   @id @default(uuid())
+  institutionId   String
+  programName     String
+  degreeLevel     String
+  annualTuition   Float?   // Null if unverified
+  currency        String   @default("INR")
+  officialPortalUrl String
+
+  institution Institution @relation(fields: [institutionId], references: [id])
+
+  @@map("education_programs")
+}
+
+model Scholarship {
+  id                 String   @id @default(uuid())
+  title              String
+  awardingBody       String
+  annualAmount       Float?
+  currency           String   @default("INR")
+  eligibilityJson    String   // JSON criteria
+  officialPortalUrl  String
+  deadline           DateTime?
+
+  @@map("scholarships")
+}
+
+// ----------------------------------------------------
+// Hyper-Local STEAM Opportunities
+// ----------------------------------------------------
+
+model HyperLocalOpportunity {
+  id                      String   @id @default(uuid())
+  title                   String
+  domain                  String   // ENVIRONMENTAL_TECH | AGRI_TECH | etc.
+  locationId              String
+  targetLocality          String   // e.g. "Tiruppur District"
+  localProblemStatement   String
+  actionType              String   // SENSOR_PROTOTYPE_PROJECT | MSME_APPRENTICESHIP
+  requiredSkillsJson      String   // JSON array
+  evidenceRecordId        String
+  externalReferenceUrl    String
+  createdAt               DateTime @default(now())
+
+  location       Location       @relation(fields: [locationId], references: [id])
+  evidenceRecord EvidenceRecord @relation(fields: [evidenceRecordId], references: [id])
+
+  @@map("hyperlocal_opportunities")
+}
+
+// ----------------------------------------------------
+// PRISM Decisions & What-If
+// ----------------------------------------------------
+
+model Recommendation {
+  id                 String   @id @default(uuid())
+  studentId          String
+  opportunityId      String
+  whatIfScenarioId   String?
+  fitScore           Float    // 0 - 100
+  confidenceScore    Float    // 0 - 100 (Fit != Confidence)
+  isFinancialFeasible Boolean @default(true)
+  parentConflictIndex Float   @default(0.0)
+  paybackPeriodYears Float?   // Null if salary unknown, never 0
+  scoreBreakdownJson String   // JSON: component scores and weights
+  skillGapsJson      String   // JSON: identified gaps
+  roadmapJson        String   // JSON: stepped pathway
+  explanationJson    String   // JSON: why this, why not, what would change
+  createdAt          DateTime @default(now())
+
+  student         StudentProfile  @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  opportunity     Opportunity     @relation(fields: [opportunityId], references: [id])
+  whatIfScenario  WhatIfScenario? @relation(fields: [whatIfScenarioId], references: [id])
+  reasons         RecommendationReason[]
+
+  @@map("recommendations")
+}
+
+model RecommendationReason {
+  id               String   @id @default(uuid())
+  recommendationId String
+  reasonType       String   // WHY_THIS | WHY_NOT_ALTERNATIVE | SENSITIVITY_TRIGGER
+  dimensionName    String
+  explanationText  String
+  metricDelta      Float?
+
+  recommendation Recommendation @relation(fields: [recommendationId], references: [id], onDelete: Cascade)
+
+  @@map("recommendation_reasons")
+}
+
+model WhatIfScenario {
+  id             String   @id @default(uuid())
+  studentId      String
+  scenarioName   String
+  deltaParams    String   // JSON: modified constraints/preferences
+  createdAt      DateTime @default(now())
+
+  student         StudentProfile   @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  recommendations Recommendation[]
+
+  @@map("what_if_scenarios")
+}
