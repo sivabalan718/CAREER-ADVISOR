@@ -9,7 +9,7 @@
     "server"
   ],
   "scripts": {
-    "build": "npm run build -w @m63/shared && npm run build -w @m63/engine && npm run build -w @m63/server && node -e \"require('fs').mkdirSync('public',{recursive:true})\"",
+    "build": "npm run build -w @m63/shared && npm run build -w @m63/engine && npm run build -w @m63/server",
     "dev": "npm run dev -w @m63/server",
     "start": "npm run start -w @m63/server"
   },
