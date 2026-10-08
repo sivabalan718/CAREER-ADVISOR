@@ -13,13 +13,13 @@ import { AdzunaJobProvider } from '../evidence/providers/adzuna.provider.js';
 import { toCountryCode } from '../evidence/query-planner.js';
 
 const UA = 'M63-PRISM-Engine/1.0 (student career guidance prototype)';
-const OVERPASS_ENDPOINTS = ['https://overpass-api.de/api/interpreter', 'https://overpass.private.coffee/api/interpreter', 'https://overpass.kumi.systems/api/interpreter', 'https://overpass-api.de/api/interpreter'];
+const OVERPASS_ENDPOINTS = ['https://overpass-api.de/api/interpreter', 'https://overpass.private.coffee/api/interpreter', 'https://overpass.kumi.systems/api/interpreter'];
 const DEFAULT_RADIUS_KM = 8;
 const DAY = 86400;
 
 const ECONOMY_WORDS = /\b(industr|manufactur|textile|garment|knitwear|export|hub|IT |software|agricultur|farming|port|tourism|automobile|leather|fishing|dyeing|mills?|factory|factories|SEZ|engineering|pharma|trade|commercial|market|economy|known for|famous for)\b/i;
 
-interface GeoResult { lat: number; lon: number; displayName: string; }
+interface GeoResult { lat: number; lon: number; displayName: string; name?: string; state?: string; source: string; }
 
 async function fetchJson<T>(url: string, init?: RequestInit, timeoutMs = 20000): Promise<T | null> {
   const controller = new AbortController();
@@ -57,18 +57,45 @@ function tagToOverpass(tag: string): string {
 export class HyperLocalIntelligenceService {
   constructor(private cache: EvidenceCacheService, private adzuna: AdzunaJobProvider) {}
 
+  /** Nominatim first; Photon and Open-Meteo (both key-free) when Nominatim is busy or blocks shared cloud IPs. */
   private async geocode(city: string, region?: string, country?: string): Promise<GeoResult | null> {
     const q = [city, region, country].filter(Boolean).join(', ');
-    const key = `geo:${q.toLowerCase()}`;
+    const key = `geo2:${q.toLowerCase()}`;
     const cached = this.cache.get<GeoResult>(key);
     if (cached) return cached.data;
-    const body = await fetchJson<Array<{ lat: string; lon: string; display_name: string }>>(
-      `https://nominatim.openstreetmap.org/search?format=json&limit=1&q=${encodeURIComponent(q)}`
-    );
-    if (!body || body.length === 0) return null;
-    const geo = { lat: Number(body[0].lat), lon: Number(body[0].lon), displayName: body[0].display_name };
-    this.cache.set(key, geo, 30 * DAY, 'STRUCTURAL');
-    return geo;
+
+    const nominatim = async (): Promise<GeoResult | null> => {
+      const body = await fetchJson<Array<{ lat: string; lon: string; display_name: string; name?: string; address?: Record<string, string> }>>(
+        `https://nominatim.openstreetmap.org/search?format=json&limit=1&addressdetails=1&accept-language=en&q=${encodeURIComponent(q)}`, undefined, 8000
+      );
+      const b = body?.[0];
+      return b ? { lat: Number(b.lat), lon: Number(b.lon), displayName: b.display_name, name: b.name, state: b.address?.state, source: 'OpenStreetMap Nominatim' } : null;
+    };
+    const photon = async (): Promise<GeoResult | null> => {
+      const body = await fetchJson<{ features?: Array<{ geometry: { coordinates: [number, number] }; properties: { name?: string; state?: string; country?: string } }> }>(
+        `https://photon.komoot.io/api/?limit=1&lang=en&osm_tag=place&q=${encodeURIComponent(q)}`, undefined, 8000
+      );
+      const f = body?.features?.[0];
+      if (!f) return null;
+      const pr = f.properties;
+      return { lat: f.geometry.coordinates[1], lon: f.geometry.coordinates[0], displayName: [pr.name, pr.state, pr.country].filter(Boolean).join(', '), name: pr.name, state: pr.state, source: 'Photon (OpenStreetMap data)' };
+    };
+    const openMeteo = async (): Promise<GeoResult | null> => {
+      const body = await fetchJson<{ results?: Array<{ latitude: number; longitude: number; name: string; admin1?: string; country?: string }> }>(
+        `https://geocoding-api.open-meteo.com/v1/search?count=1&language=en&name=${encodeURIComponent(city)}`, undefined, 8000
+      );
+      const r = body?.results?.[0];
+      return r ? { lat: r.latitude, lon: r.longitude, displayName: [r.name, r.admin1, r.country].filter(Boolean).join(', '), name: r.name, state: r.admin1, source: 'Open-Meteo geocoding (GeoNames)' } : null;
+    };
+
+    for (const provider of [nominatim, photon, openMeteo]) {
+      const geo = await provider();
+      if (geo && Number.isFinite(geo.lat) && Number.isFinite(geo.lon)) {
+        this.cache.set(key, geo, 30 * DAY, 'STRUCTURAL');
+        return geo;
+      }
+    }
+    return null;
   }
 
   private async ecosystem(area: InterestArea, geo: GeoResult, RADIUS_KM: number): Promise<LocalEcosystemSignal[] | null> {
@@ -85,9 +112,9 @@ export class HyperLocalIntelligenceService {
 
     let body: { elements?: Array<{ type: string; id?: number; lat?: number; lon?: number; center?: { lat: number; lon: number }; tags?: Record<string, string> }> } | null = null;
     for (const ep of OVERPASS_ENDPOINTS) {
-      body = await fetchJson(ep, { method: 'POST', body: new URLSearchParams({ data: query }), headers: { 'Content-Type': 'application/x-www-form-urlencoded' } }, 30000);
+      body = await fetchJson(ep, { method: 'POST', body: new URLSearchParams({ data: query }), headers: { 'Content-Type': 'application/x-www-form-urlencoded' } }, 20000);
       if (body?.elements) break;
-      await new Promise(r => setTimeout(r, 1200));
+      await new Promise(r => setTimeout(r, 800));
     }
     if (!body?.elements) return cached?.data ?? null;
 
@@ -159,6 +186,7 @@ export class HyperLocalIntelligenceService {
     country?: string;
     student?: StudentProfile | null;
     radiusKm?: number;
+    focusRole?: string;
   }): Promise<HyperLocalReport> {
     const RADIUS_KM = Math.min(15, Math.max(1, Math.round(input.radiusKm ?? DEFAULT_RADIUS_KM)));
     const area = findInterestArea(input.interest);
@@ -182,32 +210,55 @@ export class HyperLocalIntelligenceService {
     }
 
     const geo = await this.geocode(input.city, input.region, country);
-    if (!geo) limitations.push(`Could not locate "${input.city}" on OpenStreetMap, so ecosystem signals are unavailable.`);
+    if (!geo) limitations.push(`Could not locate "${input.city}" with the map services right now, so ecosystem counts are unavailable. Jobs and links below do not depend on the map.`);
 
     const [signals, context] = await Promise.all([
       geo ? this.ecosystem(area, geo, RADIUS_KM) : Promise.resolve(null),
-      this.localityContext(input.city)
+      this.localityContext(geo?.name ?? input.city)
     ]);
     if (geo && !signals) limitations.push('OpenStreetMap Overpass did not respond in time; ecosystem counts are unavailable right now.');
     if (!context) limitations.push(`No Wikipedia article was found for "${input.city}"; local economy context is unavailable.`);
 
-    // Fresh local openings for the interest's search vocabulary.
+    // Fresh openings: the role in focus first, then the interest's search vocabulary. The map is not needed.
     const cc = toCountryCode(country);
     const localJobs: Opportunity[] = [];
     let localJobsTotal: number | null = null;
+    const focusRole = input.focusRole?.trim() || undefined;
+    const terms = Array.from(new Set([...(focusRole ? [focusRole] : []), ...area.searchTerms.slice(0, 2)]));
+    // Places to try, nearest first: what the student typed, the map's name for it (e.g. Trichy -> Tiruchirappalli), then the state.
+    const places = Array.from(new Set([input.city, geo?.name, geo?.state ?? input.region].filter((p): p is string => !!p && p.trim().length > 0)));
+    let jobsPlace: string | null = null;
     if (this.adzuna.isConfigured()) {
-      for (const term of area.searchTerms.slice(0, 2)) {
-        const res = await this.adzuna.searchJobs({ keywords: term, country: cc, location: input.city, resultsPerPage: 8, maxDaysOld: 90 });
-        if (res.success && res.data) {
-          localJobsTotal = (localJobsTotal ?? 0) + res.data.totalCount;
-          for (const o of res.data.opportunities) if (!localJobs.some(j => j.id === o.id)) localJobs.push(o);
+      for (const place of places) {
+        let placeTotal = 0;
+        for (const term of terms) {
+          const res = await this.adzuna.searchJobs({ keywords: term, country: cc, location: place, resultsPerPage: 8, maxDaysOld: 90 });
+          if (res.success && res.data) {
+            placeTotal += res.data.totalCount;
+            for (const o of res.data.opportunities) if (!localJobs.some(j => j.id === o.id)) localJobs.push(o);
+          }
         }
+        localJobsTotal = placeTotal;
+        if (localJobs.length > 0) { jobsPlace = place; break; }
       }
+      if (jobsPlace && jobsPlace !== input.city && jobsPlace !== geo?.name) {
+        limitations.push(`No fresh matching postings were found inside ${input.city}, so the openings shown are from the wider ${jobsPlace} area.`);
+      }
+      if (localJobs.length === 0) limitations.push(`No ${focusRole ?? area.label.toLowerCase()} postings from the last 90 days were found for ${input.city} on Adzuna. Use the job search links for other platforms.`);
     } else {
       limitations.push('Live job provider is not configured; current local openings could not be retrieved.');
     }
-    if (localJobsTotal === 0) limitations.push(`No ${area.label.toLowerCase()} postings from the last 90 days were found for ${input.city} on Adzuna. Other platforms may list openings.`);
-    references.push({ label: `Search ${area.searchTerms[0]} jobs in ${input.city} (National Career Service)`, url: `https://www.ncs.gov.in/job-seeker/Pages/Search.aspx?k=${encodeURIComponent(area.searchTerms[0])}&l=${encodeURIComponent(input.city)}` });
+
+    // Search links always work, even when the map or the job provider does not.
+    const linkTerm = focusRole ?? area.searchTerms[0];
+    const where = geo?.name ?? input.city;
+    references.push({ label: `Search "${linkTerm}" jobs in ${where} (National Career Service)`, url: `https://www.ncs.gov.in/job-seeker/Pages/Search.aspx?k=${encodeURIComponent(linkTerm)}&l=${encodeURIComponent(where)}` });
+    if (cc === 'in') references.push({ label: `Search "${linkTerm}" jobs in ${where} (Adzuna)`, url: `https://www.adzuna.in/search?q=${encodeURIComponent(linkTerm)}&w=${encodeURIComponent(where)}` });
+    references.push({ label: `Search "${linkTerm}" jobs in ${where} (LinkedIn)`, url: `https://www.linkedin.com/jobs/search/?keywords=${encodeURIComponent(linkTerm)}&location=${encodeURIComponent(where)}` });
+    for (const sig of area.osmSignals.slice(0, 2)) {
+      references.push({ label: `${sig.label} near ${where} (Google Maps)`, url: `https://www.google.com/maps/search/${encodeURIComponent(`${sig.label} near ${where}`)}` });
+    }
+    references.push({ label: `${where} on OpenStreetMap`, url: geo ? `https://www.openstreetmap.org/#map=13/${geo.lat.toFixed(4)}/${geo.lon.toFixed(4)}` : `https://www.openstreetmap.org/search?query=${encodeURIComponent(where)}` });
 
     const eco = signals ?? [];
     const strongest = [...eco].sort((a, b) => b.count - a.count)[0];
@@ -223,8 +274,8 @@ export class HyperLocalIntelligenceService {
       ideas.push({
         id: id('employment'),
         type: 'EMPLOYMENT',
-        title: `Apply to current ${area.searchTerms[0]} openings in ${input.city}`,
-        rationale: `${localJobs.length} fresh listing(s) were retrieved for ${input.city}.${salaryNote}`,
+        title: `Apply to current ${focusRole ?? area.searchTerms[0]} openings in ${jobsPlace ?? input.city}`,
+        rationale: `${localJobs.length} fresh listing(s) were retrieved for ${jobsPlace ?? input.city}.${salaryNote}`,
         evidenceBasis: localJobs.slice(0, 3).map(j => `${j.title}${j.company ? ` — ${j.company.name}` : ''} (posted ${j.postingAgeDays ?? '?'} days ago)`),
         validationSteps: ['Open the original listing and confirm it is still accepting applications.', 'Confirm pay, shift timings and location directly with the employer.'],
         requiredCapabilities: Array.from(new Set(localJobs.flatMap(j => j.requiredSkills.map(s => s.name)))).filter(s => s !== 'Domain Fundamentals').slice(0, 5),
@@ -315,7 +366,7 @@ export class HyperLocalIntelligenceService {
         type: 'CAREER_PROGRESSION',
         title: `Grow from entry roles toward specialist and owner roles in ${area.label}`,
         rationale: 'Entry openings exist locally; specialising and documenting results is the route to higher-paying roles or your own venture.',
-        evidenceBasis: [`${localJobsTotal ?? localJobs.length} matching postings on Adzuna for ${input.city}`],
+        evidenceBasis: [`${localJobsTotal ?? localJobs.length} matching postings on Adzuna for ${jobsPlace ?? input.city}`],
         validationSteps: ['Ask two people already working in this field locally how they progressed.', 'Pick one specialisation and set a 12-month skill target.'],
         requiredCapabilities: area.capabilityKeywords.slice(0, 3),
         capabilityMatch: capability,

@@ -24,7 +24,15 @@ Hard rules:
 - If the answer is not in the context, say clearly that M63 has no verified evidence for it and point to the relevant source/link from the context if one exists.
 - When asked "what if…", explain that the What-If Lab reruns the engine, and describe which inputs would change — do not predict new scores.
 - Keep Fit, Feasibility and Confidence separate. Mention evidence status (verified / partial / external / insufficient) when it matters.
-- Write for a 15–21 year old: clear, warm, concise. Use short paragraphs or bullets. Use ₹ for Indian amounts.`;
+- Write for a 15–21 year old: clear, warm, concise. Use ₹ for Indian amounts.
+
+Output format (plain text, no Markdown):
+- Never use asterisks, #, bold, italics, tables or code blocks.
+- Start with one short summary line.
+- Then group points under short headings written as a line ending with a colon, for example "Why it fits:".
+- Each point is one line starting with "- ", one idea per line, at most about 20 words.
+- Use "1. ", "2. " only for steps the student should take in order.
+- Keep it to at most 3 headings and 8 points in total.`;
 
 async function postJson(url: string, headers: Record<string, string>, body: unknown, timeoutMs = 45000): Promise<{ status: number; json: unknown }> {
   const controller = new AbortController();

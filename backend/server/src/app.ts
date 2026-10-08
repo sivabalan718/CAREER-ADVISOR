@@ -235,12 +235,12 @@ export function createApp(): express.Application {
   }));
 
   app.post('/api/v1/hyperlocal/investigate', authenticate, asyncRoute(async (req, res) => {
-    const { interest, city, region, country, student, radiusKm } = req.body ?? {};
+    const { interest, city, region, country, student, radiusKm, focusRole } = req.body ?? {};
     if (!interest || !city) {
       res.status(400).json({ success: false, error: 'interest and city are required' });
       return;
     }
-    res.json({ success: true, data: await hyperlocal.investigate({ interest, city, region, country, student, radiusKm: typeof radiusKm === 'number' ? radiusKm : undefined }) });
+    res.json({ success: true, data: await hyperlocal.investigate({ interest, city, region, country, student, radiusKm: typeof radiusKm === 'number' ? radiusKm : undefined, focusRole: typeof focusRole === 'string' ? focusRole.slice(0, 120) : undefined }) });
   }));
 
   app.post('/api/v1/education/pathway', (req, res) => {

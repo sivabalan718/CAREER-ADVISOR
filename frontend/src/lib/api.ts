@@ -116,8 +116,8 @@ export const api = {
     call<{ decision: DecisionAnalysisResult; candidates: Opportunity[] }>('/analysis/rerank', { body: { student, parent, candidates, educationCosts } }),
   whatIf: (student: StudentProfile, parent: ParentProfile | null, scenario: WhatIfScenario, candidates: Opportunity[]) =>
     call<AdieWhatIfResult>('/analysis/what-if', { body: { student, parent, scenario, candidates } }),
-  hyperlocal: (interest: string, city: string, region: string | undefined, country: string, student: StudentProfile | null, radiusKm = 8) =>
-    call<HyperLocalReport>('/hyperlocal/investigate', { body: { interest, city, region, country, student, radiusKm } }),
+  hyperlocal: (interest: string, city: string, region: string | undefined, country: string, student: StudentProfile | null, radiusKm = 8, focusRole?: string) =>
+    call<HyperLocalReport>('/hyperlocal/investigate', { body: { interest, city, region, country, student, radiusKm, focusRole } }),
   institutions: (city: string) => call<{ institutions: Institution[]; sourceUrl: string | null; error?: string }>('/lookup/institutions', { body: { city } }),
   webLookup: (topic: string, query: string, context: string, pageUrl?: string) => call<WebLookup>('/lookup/web', { body: { topic, query, context, pageUrl } }),
   agent: (body: { message: string; student: StudentProfile; parent: ParentProfile | null; candidates: Opportunity[]; context: unknown; history: Array<{ role: 'user' | 'assistant'; content: string }>; language: string }) =>

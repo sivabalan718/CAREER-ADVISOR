@@ -10,6 +10,48 @@ import { ease, inr, Spinner, EvidenceTag } from '../ui/kit';
 
 interface Msg { role: 'user' | 'assistant'; content: string; reply?: AgentReply }
 
+type Block = { kind: 'heading'; text: string } | { kind: 'para'; text: string } | { kind: 'bullets'; items: string[] } | { kind: 'steps'; items: string[] };
+
+/** Strips Markdown symbols (**, __, #, `) the model may still emit; keeps the words. */
+function clean(s: string): string {
+  return s.replace(/\*\*|__|`/g, '').replace(/(^|\s)\*(\S[^*]*?)\*(?=\s|[.,;:!?]|$)/g, '$1$2').replace(/^#{1,6}\s*/, '').trim();
+}
+
+/** Turns a plain-text answer into headings, bullet lists, numbered steps and short paragraphs. */
+function toBlocks(text: string): Block[] {
+  const blocks: Block[] = [];
+  for (const raw of text.split(/\r?\n/)) {
+    const line = raw.trim();
+    if (!line || /^[-*_]{3,}$/.test(line)) continue;
+    const bullet = line.match(/^[-*•]\s+(.*)$/);
+    const step = line.match(/^\d+[.)]\s+(.*)$/);
+    const last = blocks[blocks.length - 1];
+    if (bullet || step) {
+      const kind = bullet ? 'bullets' : 'steps';
+      const item = clean((bullet ?? step)![1]);
+      if (last && last.kind === kind) last.items.push(item); else blocks.push({ kind, items: [item] });
+    } else if (/^#{1,6}\s/.test(line) || (/:$/.test(clean(line)) && clean(line).length <= 60) || /^\*\*[^*]+\*\*:?$/.test(line)) {
+      blocks.push({ kind: 'heading', text: clean(line).replace(/:$/, '') });
+    } else {
+      blocks.push({ kind: 'para', text: clean(line) });
+    }
+  }
+  return blocks;
+}
+
+function StructuredAnswer({ text }: { text: string }) {
+  return (
+    <div className="col" style={{ gap: 8 }}>
+      {toBlocks(text).map((b, i) => {
+        if (b.kind === 'heading') return <div key={i} style={{ fontWeight: 700, fontSize: 13, letterSpacing: 0.3, color: '#c4b5fd', marginTop: i ? 6 : 0 }}>{b.text}</div>;
+        if (b.kind === 'para') return <p key={i} style={{ lineHeight: 1.55 }}>{b.text}</p>;
+        const List = b.kind === 'steps' ? 'ol' : 'ul';
+        return <List key={i} style={{ paddingLeft: 20, display: 'flex', flexDirection: 'column', gap: 4, lineHeight: 1.5 }}>{b.items.map((it, j) => <li key={j}>{it}</li>)}</List>;
+      })}
+    </div>
+  );
+}
+
 const SUGGESTIONS = [
   'Why did you recommend my top pathway?',
   'What if my budget is only ₹8 lakh?',
@@ -108,7 +150,7 @@ export default function AIChat({ focus, onClose }: { focus: RankedOpportunity | 
           )}
           {msgs.map((m, i) => (
             <motion.div key={i} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} style={{ alignSelf: m.role === 'user' ? 'flex-end' : 'flex-start', maxWidth: '92%' }}>
-              <div style={{ padding: '12px 14px', borderRadius: 16, whiteSpace: 'pre-wrap', fontSize: 14, background: m.role === 'user' ? 'linear-gradient(120deg, rgba(124,58,237,.6), rgba(37,99,235,.5))' : 'rgba(255,255,255,0.05)', border: '1px solid var(--stroke)' }}>{m.content}</div>
+              <div style={{ padding: '12px 14px', borderRadius: 16, whiteSpace: m.role === 'user' ? 'pre-wrap' : 'normal', fontSize: 14, background: m.role === 'user' ? 'linear-gradient(120deg, rgba(124,58,237,.6), rgba(37,99,235,.5))' : 'rgba(255,255,255,0.05)', border: '1px solid var(--stroke)' }}>{m.role === 'user' ? m.content : <StructuredAnswer text={m.content} />}</div>
               {m.reply && <ToolCard r={m.reply} />}
               {m.reply && <div className="dim mono" style={{ fontSize: 10, marginTop: 4 }}>{m.reply.mode === 'LLM_GROUNDED' ? `grounded · ${m.reply.model}` : 'deterministic explainer'} · intent {m.reply.intent}</div>}
             </motion.div>

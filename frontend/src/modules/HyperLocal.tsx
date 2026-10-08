@@ -17,7 +17,7 @@ const TYPE_META: Record<string, { label: string; color: string }> = {
   MICRO_ENTERPRISE: { label: 'Micro-venture', color: '#fb923c' }, COMMUNITY_SOLUTION: { label: 'Community solution', color: '#f472b6' }, CAREER_PROGRESSION: { label: 'Career progression', color: '#facc15' }
 };
 
-export default function HyperLocal(_: ModuleProps) {
+export default function HyperLocal({ focus }: ModuleProps) {
   const { student } = useStore();
   const { t } = useI18n();
   const [interest, setInterest] = useState(student?.aspirations.preferredIndustries[0] ?? INTEREST_AREAS[0].id);
@@ -30,7 +30,7 @@ export default function HyperLocal(_: ModuleProps) {
 
   const run = async () => {
     setBusy(true); setErr(null);
-    try { setRep(await api.hyperlocal(interest, city, student?.location.region, student?.location.country || 'India', student, radius)); setHidden({}); }
+    try { setRep(await api.hyperlocal(interest, city, student?.location.region, student?.location.country || 'India', student, radius, focus?.opportunity.title)); setHidden({}); }
     catch (e) { setErr(e instanceof Error ? e.message : 'Investigation failed'); }
     setBusy(false);
   };
@@ -65,7 +65,15 @@ export default function HyperLocal(_: ModuleProps) {
                   )))}
                   <CircleMarker center={[rep.locality.lat, rep.locality.lon]} radius={7} pathOptions={{ color: '#22d3ee', fillOpacity: 1 }}><Tooltip>{rep.locality.displayName}</Tooltip></CircleMarker>
                 </MapContainer>
-              ) : <div className="center card-pad muted" style={{ height: 340 }}><T>Location could not be mapped.</T></div>}
+              ) : (
+                <div className="col center card-pad" style={{ minHeight: 340, gap: 12, textAlign: 'center' }}>
+                  <p className="muted"><T>The map service could not place this location right now. Jobs and links below still work.</T></p>
+                  <div className="col" style={{ gap: 6 }}>
+                    {rep.externalReferences.filter(r => /maps|openstreetmap/i.test(r.url)).map(r => <a key={r.url} className="link" style={{ fontSize: 13 }} href={r.url} target="_blank" rel="noreferrer"><T>{r.label}</T> <ExternalLink size={11} /></a>)}
+                  </div>
+                  <button className="btn btn-ghost btn-sm" onClick={run} disabled={busy}><T>Retry map</T></button>
+                </div>
+              )}
             </div>
             <div className="glass card-pad">
               <div className="row wrap" style={{ gap: 6, marginBottom: 12 }}>{rep.ecosystem.map((s, si) => (
@@ -117,6 +125,7 @@ export default function HyperLocal(_: ModuleProps) {
             <div className="row"><Briefcase size={17} style={{ color: '#86efac' }} /><span className="eyebrow"><T>Current local openings</T> {rep.localJobsTotal !== null && `· ${rep.localJobsTotal}`}</span></div>
             <div className="col" style={{ gap: 8, marginTop: 12 }}>
               {rep.localJobs.length === 0 && <p className="muted"><T>No fresh postings retrieved for this locality.</T></p>}
+              {rep.localJobs.length === 0 && rep.externalReferences.filter(r => /jobs/i.test(r.label)).map(r => <a key={r.url} className="link" style={{ fontSize: 13 }} href={r.url} target="_blank" rel="noreferrer"><T>{r.label}</T> <ExternalLink size={11} /></a>)}
               {rep.localJobs.slice(0, 8).map(j => (
                 <a key={j.id} href={j.externalVerificationUrl} target="_blank" rel="noreferrer" className="list-item row between">
                   <div><div style={{ fontWeight: 600 }}>{j.title}</div><div className="dim" style={{ fontSize: 12 }}>{j.company?.name ?? t('Employer not disclosed')} · {j.location.city ?? ''} · {j.postingAgeDays ?? '?'} <T>days ago</T></div></div>
