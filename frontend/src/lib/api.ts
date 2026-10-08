@@ -19,9 +19,17 @@ export class ApiError extends Error {
   constructor(message: string, public status: number) { super(message); }
 }
 
+// M63 backend origin, e.g. https://ca-backend-weld.vercel.app or http://localhost:4000.
+// Empty → same-origin relative URLs (local dev through the Vite /api proxy).
+const API_BASE_URL = (import.meta.env.VITE_API_URL ?? '').trim().replace(/\/+$/, '');
+
+export function apiUrl(path: string): string {
+  return `${API_BASE_URL}/api/v1${path.startsWith('/') ? path : `/${path}`}`;
+}
+
 async function call<T>(path: string, init: { method?: string; body?: unknown } = {}): Promise<T> {
   const t = await token();
-  const res = await fetch(`/api/v1${path}`, {
+  const res = await fetch(apiUrl(path), {
     method: init.method ?? (init.body ? 'POST' : 'GET'),
     headers: { 'Content-Type': 'application/json', ...(t ? { Authorization: `Bearer ${t}` } : {}) },
     body: init.body ? JSON.stringify(init.body) : undefined
