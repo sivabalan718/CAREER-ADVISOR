@@ -1,4 +1,4 @@
-import { lazy, Suspense, useMemo, useState } from 'react';
+import { lazy, Suspense, useMemo, useState, useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import { AnimatePresence, motion } from 'framer-motion';
 import {
@@ -51,6 +51,21 @@ export default function Studio() {
   const [openId, setOpenId] = useState<ModuleId | null>(null);
   const [focusId, setFocusId] = useState<string | null>(null);
   const [chat, setChat] = useState(false);
+  const modalBodyRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (openId && modalBodyRef.current) {
+      modalBodyRef.current.scrollTop = 0;
+    }
+  }, [openId]);
+
+  useEffect(() => {
+    if (openId || chat) {
+      const orig = document.body.style.overflow;
+      document.body.style.overflow = 'hidden';
+      return () => { document.body.style.overflow = orig; };
+    }
+  }, [openId, chat]);
 
   const candidates = analysis?.decision.candidates ?? [];
   const focus = useMemo(() => candidates.find(c => c.opportunity.id === focusId) ?? candidates[0] ?? null, [candidates, focusId]);
@@ -213,7 +228,7 @@ export default function Studio() {
         <div className="bento">
           {MODULES.map((m, i) => (
             <motion.div key={m.id} style={{ gridColumn: `span ${m.span}`, gridRow: `span ${m.rows}` }} initial="hidden" animate="show" variants={fadeUp} custom={i + 2}>
-              <TiltCard layoutId={`mod-${m.id}`} onClick={() => setOpenId(m.id)} style={{ height: '100%' }}>
+              <TiltCard onClick={() => setOpenId(m.id)} style={{ height: '100%' }}>
                 <div className="row between">
                   <div className="tile-icon" style={{ color: m.accent, boxShadow: `0 0 34px -8px ${m.accent}` }}><m.icon size={19} /></div>
                   <ArrowUpRight size={17} className="dim" />
@@ -231,19 +246,71 @@ export default function Studio() {
 
       {createPortal(<AnimatePresence>
         {openId && meta && (
-          <motion.div style={{ position: 'fixed', inset: 0, zIndex: 40, background: 'rgba(3,4,8,.6)', backdropFilter: 'blur(8px)' }} initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setOpenId(null)}>
-            <motion.div layoutId={`mod-${meta.id}`} className="glass-strong scroll-y" onClick={e => e.stopPropagation()}
-              style={{ position: 'absolute', inset: '3vh 3vw', padding: 0 }} transition={{ duration: 0.55, ease }}>
-              <div className="row between" style={{ position: 'sticky', top: 0, zIndex: 3, padding: '20px 28px', background: 'linear-gradient(180deg, rgba(10,12,24,.98), rgba(10,12,24,.85))', borderBottom: '1px solid var(--stroke)' }}>
-                <div className="row"><div className="tile-icon" style={{ color: meta.accent }}><meta.icon size={18} /></div><div><div className="display" style={{ fontSize: 22 }}><T>{meta.title}</T></div><div className="dim" style={{ fontSize: 12 }}><T>{meta.sub}</T></div></div></div>
+          <motion.div
+            style={{
+              position: 'fixed',
+              inset: 0,
+              zIndex: 9999,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              padding: '24px 20px',
+              background: 'rgba(3,4,8,.82)',
+              backdropFilter: 'blur(12px)',
+              WebkitBackdropFilter: 'blur(12px)'
+            }}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            onClick={() => setOpenId(null)}
+          >
+            <motion.div
+              className="glass-strong col"
+              onClick={e => e.stopPropagation()}
+              style={{
+                width: 'min(1240px, 100%)',
+                height: 'min(92vh, 920px)',
+                maxHeight: '92vh',
+                padding: 0,
+                gap: 0,
+                overflow: 'hidden',
+                borderRadius: 'var(--radius)',
+                position: 'relative'
+              }}
+              initial={{ opacity: 0, scale: 0.95, y: 18 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 18 }}
+              transition={{ duration: 0.28, ease }}
+            >
+              <div
+                className="row between"
+                style={{
+                  flexShrink: 0,
+                  padding: '20px 28px',
+                  background: 'rgba(10,12,24,.96)',
+                  borderBottom: '1px solid var(--stroke)',
+                  zIndex: 3
+                }}
+              >
+                <div className="row">
+                  <div className="tile-icon" style={{ color: meta.accent }}><meta.icon size={18} /></div>
+                  <div>
+                    <div className="display" style={{ fontSize: 22 }}><T>{meta.title}</T></div>
+                    <div className="dim" style={{ fontSize: 12 }}><T>{meta.sub}</T></div>
+                  </div>
+                </div>
                 <div className="row">
                   {focus && <span className="tag" style={{ maxWidth: 360, overflow: 'hidden', textOverflow: 'ellipsis' }}><T>Focus</T>: {focus.opportunity.title}</span>}
                   <button className="icon-btn" onClick={() => setOpenId(null)}><X size={17} /></button>
                 </div>
               </div>
-              <motion.div style={{ padding: 28 }} initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.25, duration: 0.5, ease }}>
+              <div
+                ref={modalBodyRef}
+                className="col scroll-y"
+                style={{ flex: 1, padding: 28, gap: 20 }}
+              >
                 <Suspense fallback={<Spinner label="Loading" />}>{render(meta.id)}</Suspense>
-              </motion.div>
+              </div>
             </motion.div>
           </motion.div>
         )}
