@@ -32,7 +32,7 @@ export default function App() {
             <AnimatePresence mode="wait">
               <motion.div key={route}
                 initial={{ opacity: 0, filter: 'blur(14px)', scale: 0.985 }}
-                animate={{ opacity: 1, filter: 'blur(0px)', scale: 1 }}
+                animate={{ opacity: 1, filter: 'none', scale: 1, transitionEnd: { transform: 'none' } }}
                 exit={{ opacity: 0, filter: 'blur(14px)', scale: 1.01 }}
                 transition={{ duration: 0.6, ease }}>
                 <Page />

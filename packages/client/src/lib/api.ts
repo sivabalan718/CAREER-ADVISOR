@@ -81,7 +81,7 @@ export interface AssessmentStep {
   usedFixedIds: string[];
 }
 
-export interface DecisionUpdate { id: string; type: string; severity: 'HIGH' | 'MEDIUM' | 'LOW'; title: string; detail: string; opportunityId?: string; sourceUrl?: string }
+export interface DecisionUpdate { id: string; type: string; severity: 'HIGH' | 'MEDIUM' | 'LOW'; title: string; detail: string; opportunityId?: string; sourceUrl?: string; at?: string; read?: boolean }
 
 export interface WebLookup {
   topic: string; query: string; status: 'PARTIAL' | 'INSUFFICIENT';
@@ -120,5 +120,6 @@ export const api = {
   goalAnswer: (session: unknown, answer: string, language: string) => call<unknown>('/goal/answer', { body: { session, answer, language } }),
   goalFinish: (session: unknown) => call<unknown>('/goal/finish', { body: { session } }),
   goalProgress: (session: unknown, updates: Record<string, unknown>) => call<unknown>('/goal/progress', { body: { session, updates } }),
+  watch: (student: StudentProfile, previous: DecisionAnalysisResult, lastAnalysisAt: string) => call<{ updates: DecisionUpdate[]; checkedAt: string; checks: string[] }>('/updates/watch', { body: { student, previous, lastAnalysisAt } }),
   deleteAccount: () => call<{ message: string }>('/account', { method: 'DELETE' })
 };

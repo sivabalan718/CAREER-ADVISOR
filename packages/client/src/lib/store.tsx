@@ -44,6 +44,8 @@ interface Store {
   keepScenario: () => Promise<void>;
   saveScenario: () => Promise<void>;
   discardScenario: () => void;
+  addUpdates: (list: DecisionUpdate[]) => Promise<number>;
+  markUpdatesRead: () => void;
   signUp: (name: string, email: string, password: string) => Promise<string | null>;
   signIn: (email: string, password: string) => Promise<string | null>;
   signOut: () => Promise<void>;
@@ -277,6 +279,21 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
 
   const discardScenario = () => setScenario(null);
 
+  /** Adds live-watch updates (deduplicated by id); returns how many were new. */
+  const addUpdates: Store['addUpdates'] = async list => {
+    const known = new Set(updates.map(u => u.id));
+    const fresh = list.filter(u => !known.has(u.id)).map(u => ({ ...u, at: u.at ?? new Date().toISOString(), read: false }));
+    if (!fresh.length) return 0;
+    setUpdates(u => [...fresh, ...u].slice(0, 60));
+    if (dbReady && supabase && session) {
+      const { error } = await supabase.from('user_updates').insert(fresh.map(u => ({ user_id: session.user.id, update: u })));
+      if (!error) return fresh.length;
+    }
+    local.write(uid, { updates: [...fresh, ...local.read(uid).updates].slice(0, 60) });
+    return fresh.length;
+  };
+  const markUpdatesRead = () => setUpdates(u => u.map(x => ({ ...x, read: true })));
+
   const runAnalysis = async () => {
     setAnalysisError(null);
     if (scenario && !scenario.bundle) {
@@ -352,7 +369,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
   const value = useMemo<Store>(() => ({
     ready, route, go, session, userName, dbReady, answers, setAnswers, student, parent, educationCosts, analysis, history, updates, milestones, analysisError,
     signUp, signIn, signOut, saveJourney, saveAptitude, runAnalysis, openAnalysis, setEducationCost, toggleMilestone, saveConsent, deleteEverything,
-    scenario, buildProfiles, startDeepScenario, keepScenario, saveScenario, discardScenario
+    scenario, buildProfiles, startDeepScenario, keepScenario, saveScenario, discardScenario, addUpdates, markUpdatesRead
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }), [ready, route, session, userName, dbReady, answers, student, parent, educationCosts, analysis, history, updates, milestones, analysisError, scenario]);
 

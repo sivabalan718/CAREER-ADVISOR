@@ -26,6 +26,7 @@ import { GroundedAssistant } from './ai/assistant.js';
 import { M63Agent, translateTexts } from './ai/agent.js';
 import { LiveLookupService } from './education/live-lookup.js';
 import { GoalService } from './goal/goal-service.js';
+import { UpdatesWatch } from './evidence/updates-watch.js';
 import { AuthenticatedRequest } from './auth/auth.middleware.js';
 
 export interface EducationCostInput {
@@ -87,6 +88,7 @@ export function createApp(): express.Application {
   const agent = new M63Agent(evidenceManager, cache);
   const lookup = new LiveLookupService(cache);
   const goals = new GoalService(evidenceManager, lookup);
+  const watch = new UpdatesWatch(evidenceManager, lookup);
 
   app.get('/health', (_req, res) => {
     res.json({ status: 'healthy', product: 'M63', engine: 'PRISM / ADIE v2', timestamp: new Date().toISOString() });
@@ -316,6 +318,12 @@ export function createApp(): express.Application {
       return;
     }
     res.json({ success: true, data: await lookup.webGrounded(topic, String(query), String(context ?? ''), pageUrl ? String(pageUrl) : undefined) });
+  }));
+
+  app.post('/api/v1/updates/watch', authenticate, asyncRoute(async (req, res) => {
+    const { student, previous, lastAnalysisAt } = req.body ?? {};
+    if (!student || !previous?.candidates) { res.status(400).json({ success: false, error: 'student and previous analysis are required' }); return; }
+    res.json({ success: true, data: await watch.check(student, previous, lastAnalysisAt ?? new Date(Date.now() - 86400_000).toISOString()) });
   }));
 
   app.post('/api/v1/updates/diff', (req, res) => {

@@ -1,4 +1,5 @@
 import { lazy, Suspense, useMemo, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { AnimatePresence, motion } from 'framer-motion';
 import {
   Bell, Compass, LineChart as LineIcon, Users, FlaskConical, GraduationCap, MapPin, Grid2x2, Route as RouteIcon,
@@ -228,7 +229,7 @@ export default function Studio() {
         </div>
       </section>
 
-      <AnimatePresence>
+      {createPortal(<AnimatePresence>
         {openId && meta && (
           <motion.div style={{ position: 'fixed', inset: 0, zIndex: 40, background: 'rgba(3,4,8,.6)', backdropFilter: 'blur(8px)' }} initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setOpenId(null)}>
             <motion.div layoutId={`mod-${meta.id}`} className="glass-strong scroll-y" onClick={e => e.stopPropagation()}
@@ -246,7 +247,7 @@ export default function Studio() {
             </motion.div>
           </motion.div>
         )}
-      </AnimatePresence>
+      </AnimatePresence>, document.body)}
 
       <motion.button className="center" onClick={() => setChat(true)} whileHover={{ scale: 1.08 }} whileTap={{ scale: 0.94 }}
         style={{ position: 'fixed', right: 26, bottom: 26, width: 64, height: 64, borderRadius: 22, zIndex: 30, background: 'conic-gradient(from 0deg, #8b5cf6, #3b82f6, #22d3ee, #34d399, #facc15, #fb923c, #f43f5e, #8b5cf6)', boxShadow: '0 20px 60px -10px rgba(139,92,246,.9)' }}
@@ -254,8 +255,8 @@ export default function Studio() {
         <span className="center" style={{ width: 56, height: 56, borderRadius: 19, background: '#0a0c18' }}><Sparkles size={22} /></span>
       </motion.button>
 
-      {scenario?.bundle && <Suspense fallback={null}><ScenarioCompare /></Suspense>}
-      <AnimatePresence>{chat && <Suspense fallback={null}><AIChat focus={focus} onClose={() => setChat(false)} /></Suspense>}</AnimatePresence>
+      {scenario?.bundle && createPortal(<Suspense fallback={null}><ScenarioCompare /></Suspense>, document.body)}
+      {createPortal(<AnimatePresence>{chat && <Suspense fallback={null}><AIChat focus={focus} onClose={() => setChat(false)} /></Suspense>}</AnimatePresence>, document.body)}
       <style>{`@media (max-width: 960px){ section .glass .grid[style]{ grid-template-columns: 1fr !important } }`}</style>
     </div>
   );

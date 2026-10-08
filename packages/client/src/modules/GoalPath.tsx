@@ -9,7 +9,7 @@ import { ease, ScoreRing, Spinner } from '../ui/kit';
 
 /* Loose client-side shapes of the engine's GoalSession / MissionMap (the engine owns all logic). */
 interface Field { key: string; label: string; type: string; options?: string[]; min?: number; max?: number }
-interface Session { id: string; goal: { title: string; shape: string }; fields: Field[]; values: Record<string, unknown>; history: Array<{ at: string; readiness: number | null }>; [k: string]: unknown }
+interface Session { id: string; goal: { title: string; shape: string }; fields: Field[]; values: Record<string, unknown>; history: Array<{ at: string; readiness: number | null }>;[k: string]: unknown }
 interface ReqStatus { id: string; label: string; kind: string; readiness: number | null; target?: number; verified: boolean; note?: string; current: unknown; source?: { title: string; url: string } }
 interface Mission { id: string; order: number; title: string; why: string; action: string; proof: string; expectedImpact: string; unlock: string; window?: string; verifiedBasis?: { title: string; url: string } }
 interface MapT { goal: { title: string; shape: string }; currentPosition: Array<{ label: string; value: string; source: string }>; readiness: number | null; readinessBasis?: { measured: number; total: number }; biggestGap: ReqStatus | null; requirements: ReqStatus[]; missions: Mission[]; unknowns: string[]; evidenceSources: Array<{ title: string; url: string }> }
@@ -171,29 +171,29 @@ export default function GoalPath() {
 
       <div className="grid" style={{ gridTemplateColumns: 'minmax(0,1.5fr) minmax(280px,0.9fr)', gap: 18 }}>
         <div>
-        <RoadmapFlow map={map} />
-        <div style={{ position: 'relative', paddingLeft: 34 }}>
-          <motion.div style={{ position: 'absolute', left: 13, top: 10, bottom: 10, width: 2, background: 'var(--spectrum)', transformOrigin: 'top' }} initial={{ scaleY: 0 }} animate={{ scaleY: 1 }} transition={{ duration: 1.2, ease }} />
-          {map.missions.length === 0 && <div className="glass card-pad"><Sparkles size={18} /> <T>No major measured gaps left — log new progress to keep the map current.</T></div>}
-          <AnimatePresence>
-            {map.missions.map((m, i) => (
-              <motion.div key={m.id} layout className="glass card-pad" style={{ marginBottom: 14, position: 'relative', borderColor: changed(m.title) ? 'rgba(250,204,21,.6)' : undefined }}
-                initial={{ opacity: 0, x: 30 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0 }} transition={{ delay: i * 0.08, ease }}>
-                <span className="center mono" style={{ position: 'absolute', left: -34, top: 22, width: 28, height: 28, borderRadius: 9, background: '#0b0d18', border: '1px solid var(--stroke-2)', fontSize: 12 }}>{String(m.order).padStart(2, '0')}</span>
-                <div className="row between wrap"><span className="eyebrow"><T>Mission</T> {String(m.order).padStart(2, '0')}{m.window ? ` · ${m.window}` : ''}</span>{changed(m.title) && <span className="tag partial"><T>new after your update</T></span>}</div>
-                <div className="display" style={{ fontSize: 21, marginTop: 6 }}><T>{m.title}</T></div>
-                <p style={{ marginTop: 6, fontSize: 14 }}><T>{m.action}</T></p>
-                <div className="grid g2" style={{ marginTop: 12, gap: 10 }}>
-                  <div className="list-item" style={{ padding: 10 }}><div className="row dim" style={{ fontSize: 11, gap: 6 }}><Sparkles size={12} /><T>Why this mission</T></div><div style={{ fontSize: 13 }}><T>{m.why}</T></div></div>
-                  <div className="list-item" style={{ padding: 10 }}><div className="row dim" style={{ fontSize: 11, gap: 6 }}><FileCheck size={12} /><T>Proof required</T></div><div style={{ fontSize: 13 }}><T>{m.proof}</T></div></div>
-                  <div className="list-item" style={{ padding: 10 }}><div className="row dim" style={{ fontSize: 11, gap: 6 }}><TrendingUp size={12} /><T>Expected impact</T></div><div style={{ fontSize: 13 }}><T>{m.expectedImpact}</T></div></div>
-                  <div className="list-item" style={{ padding: 10 }}><div className="row dim" style={{ fontSize: 11, gap: 6 }}><Unlock size={12} /><T>Unlock</T></div><div style={{ fontSize: 13 }}><T>{m.unlock}</T></div></div>
-                </div>
-                {m.verifiedBasis && <a className="tag verified" style={{ marginTop: 10 }} href={m.verifiedBasis.url} target="_blank" rel="noreferrer"><ShieldCheck size={12} /><T>Target from official evidence</T> <ExternalLink size={10} /></a>}
-              </motion.div>
-            ))}
-          </AnimatePresence>
-        </div>
+          <RoadmapFlow map={map} />
+          <div style={{ position: 'relative', paddingLeft: 34 }}>
+            <motion.div style={{ position: 'absolute', left: 13, top: 10, bottom: 10, width: 2, background: 'var(--spectrum)', transformOrigin: 'top' }} initial={{ scaleY: 0 }} animate={{ scaleY: 1 }} transition={{ duration: 1.2, ease }} />
+            {map.missions.length === 0 && <div className="glass card-pad"><Sparkles size={18} /> <T>No major measured gaps left — log new progress to keep the map current.</T></div>}
+            <AnimatePresence>
+              {map.missions.map((m, i) => (
+                <motion.div key={m.id} layout className="glass card-pad" style={{ marginBottom: 14, position: 'relative', borderColor: changed(m.title) ? 'rgba(250,204,21,.6)' : undefined }}
+                  initial={{ opacity: 0, x: 30 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0 }} transition={{ delay: i * 0.08, ease }}>
+                  <span className="center mono" style={{ position: 'absolute', left: -34, top: 22, width: 28, height: 28, borderRadius: 9, background: '#0b0d18', border: '1px solid var(--stroke-2)', fontSize: 12 }}>{String(m.order).padStart(2, '0')}</span>
+                  <div className="row between wrap"><span className="eyebrow"><T>Mission</T> {String(m.order).padStart(2, '0')}{m.window ? ` · ${m.window}` : ''}</span>{changed(m.title) && <span className="tag partial"><T>new after your update</T></span>}</div>
+                  <div className="display" style={{ fontSize: 21, marginTop: 6 }}><T>{m.title}</T></div>
+                  <p style={{ marginTop: 6, fontSize: 14 }}><T>{m.action}</T></p>
+                  <div className="grid g2" style={{ marginTop: 12, gap: 10 }}>
+                    <div className="list-item" style={{ padding: 10 }}><div className="row dim" style={{ fontSize: 11, gap: 6 }}><Sparkles size={12} /><T>Why this mission</T></div><div style={{ fontSize: 13 }}><T>{m.why}</T></div></div>
+                    <div className="list-item" style={{ padding: 10 }}><div className="row dim" style={{ fontSize: 11, gap: 6 }}><FileCheck size={12} /><T>Proof required</T></div><div style={{ fontSize: 13 }}><T>{m.proof}</T></div></div>
+                    <div className="list-item" style={{ padding: 10 }}><div className="row dim" style={{ fontSize: 11, gap: 6 }}><TrendingUp size={12} /><T>Expected impact</T></div><div style={{ fontSize: 13 }}><T>{m.expectedImpact}</T></div></div>
+                    <div className="list-item" style={{ padding: 10 }}><div className="row dim" style={{ fontSize: 11, gap: 6 }}><Unlock size={12} /><T>Unlock</T></div><div style={{ fontSize: 13 }}><T>{m.unlock}</T></div></div>
+                  </div>
+                  {m.verifiedBasis && <a className="tag verified" style={{ marginTop: 10 }} href={m.verifiedBasis.url} target="_blank" rel="noreferrer"><ShieldCheck size={12} /><T>Target from official evidence</T> <ExternalLink size={10} /></a>}
+                </motion.div>
+              ))}
+            </AnimatePresence>
+          </div>
         </div>
 
         <div className="col" style={{ gap: 14 }}>
