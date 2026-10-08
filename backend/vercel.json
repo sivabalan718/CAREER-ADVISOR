@@ -1,17 +1,5 @@
 {
-  "framework": null,
+  "framework": "express",
   "installCommand": "npm install --include=dev",
-  "buildCommand": "npm run build",
-  "functions": {
-    "api/index.ts": {
-      "includeFiles": "data/**",
-      "maxDuration": 60
-    }
-  },
-  "rewrites": [
-    {
-      "source": "/(.*)",
-      "destination": "/api"
-    }
-  ]
+  "buildCommand": "npm run build"
 }

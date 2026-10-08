@@ -172,6 +172,7 @@ export class DisruptionIndex {
   constructor(datasetPath?: string) {
     const candidates = [
       datasetPath,
+      path.join(__dirname, '..', '..', '..', 'data', 'disruption', 'ilo_genai_exposure_isco08.json'), // server/{src,dist}/market → backend/data
       path.join(REPO_ROOT, 'backend', 'data', 'disruption', 'ilo_genai_exposure_isco08.json'),
       path.join(REPO_ROOT, 'data', 'disruption', 'ilo_genai_exposure_isco08.json'),
       path.resolve(process.cwd(), 'data', 'disruption', 'ilo_genai_exposure_isco08.json'),

@@ -29,5 +29,16 @@
     "prisma": "^6.3.0",
     "tsx": "^4.19.2",
     "typescript": "^5.7.0"
+  },
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    },
+    "./app": {
+      "types": "./dist/app.d.ts",
+      "default": "./dist/app.js"
+    }
   }
 }
