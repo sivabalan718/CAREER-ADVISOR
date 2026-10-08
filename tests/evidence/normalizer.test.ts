@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { OpportunityNormalizer, RawExternalJobRecord } from '../../packages/server/src/evidence/normalizer.js';
+import { OpportunityNormalizer, RawExternalJobRecord } from '../../backend/src/evidence/normalizer.js';
 
 describe('Evidence Layer — Opportunity Normalizer & Data Integrity', () => {
   const normalizer = new OpportunityNormalizer();

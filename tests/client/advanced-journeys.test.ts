@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
-import { createEmptyStudentProfile } from '../../packages/client/src/context/AppStateContext.js';
-import { generateGroundedAIResponse } from '../../packages/client/src/components/ai/grounded-explainer.js';
+import { createEmptyStudentProfile } from '../../frontend/src/context/AppStateContext.js';
+import { generateGroundedAIResponse } from '../../frontend/src/components/ai/grounded-explainer.js';
 import {
   Opportunity,
   RankedOpportunity,

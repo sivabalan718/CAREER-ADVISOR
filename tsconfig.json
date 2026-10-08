@@ -5,7 +5,7 @@
   },
   "files": [],
   "references": [
-    { "path": "./packages/shared" },
-    { "path": "./packages/engine" }
+    { "path": "./shared" },
+    { "path": "./engine" }
   ]
 }

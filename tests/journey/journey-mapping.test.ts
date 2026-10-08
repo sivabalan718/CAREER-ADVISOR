@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
-import { JOURNEY_STEPS, PROBLEM_SOLVING_SCENARIOS, EDUCATION_BUDGET_RANGES } from '../../packages/client/src/journey/question-defs.js';
-import { JourneyFormData } from '../../packages/client/src/journey/journey-types.js';
+import { JOURNEY_STEPS, PROBLEM_SOLVING_SCENARIOS, EDUCATION_BUDGET_RANGES } from '../../frontend/src/journey/question-defs.js';
+import { JourneyFormData } from '../../frontend/src/journey/journey-types.js';
 import { StudentProfile, ParentProfile } from '@m63/shared';
 
 describe('M63 Phase 3 Prompt 2: Student Journey Architecture', () => {

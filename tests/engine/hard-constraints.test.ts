@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { HardConstraintFilter } from '../../packages/engine/src/hard-constraints.js';
+import { HardConstraintFilter } from '../../engine/src/hard-constraints.js';
 import { StudentProfile, ParentProfile, Opportunity } from '@m63/shared';
 
 describe('Hard Constraint Filter — Edge Cases & Invariant Enforcement', () => {

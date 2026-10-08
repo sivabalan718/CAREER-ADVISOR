@@ -1,8 +1,8 @@
 import { describe, it, expect, vi } from 'vitest';
-import { EvidenceManager } from '../../packages/server/src/evidence/evidence-manager.js';
-import { FallbackOpportunityProvider } from '../../packages/server/src/evidence/providers/fallback.provider.js';
-import { AdzunaJobProvider } from '../../packages/server/src/evidence/providers/adzuna.provider.js';
-import { EvidenceCacheService } from '../../packages/server/src/evidence/cache.service.js';
+import { EvidenceManager } from '../../backend/src/evidence/evidence-manager.js';
+import { FallbackOpportunityProvider } from '../../backend/src/evidence/providers/fallback.provider.js';
+import { AdzunaJobProvider } from '../../backend/src/evidence/providers/adzuna.provider.js';
+import { EvidenceCacheService } from '../../backend/src/evidence/cache.service.js';
 import { StudentProfile } from '@m63/shared';
 
 describe('EvidenceManager — Master Coordination, Provenance & Dynamic Discovery', () => {

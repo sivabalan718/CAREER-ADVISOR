@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { createEmptyStudentProfile } from '../../packages/client/src/context/AppStateContext.js';
+import { createEmptyStudentProfile } from '../../frontend/src/context/AppStateContext.js';
 import { RankedOpportunity, DecisionAnalysisResult, Opportunity } from '@m63/shared';
 
 describe('M63 Phase 3 Prompt 3: Career Intelligence & Analysis Experience', () => {

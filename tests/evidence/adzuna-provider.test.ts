@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { AdzunaJobProvider } from '../../packages/server/src/evidence/providers/adzuna.provider.js';
+import { AdzunaJobProvider } from '../../backend/src/evidence/providers/adzuna.provider.js';
 
 describe('AdzunaJobProvider — Live Adapter & Network Resilience', () => {
   beforeEach(() => {

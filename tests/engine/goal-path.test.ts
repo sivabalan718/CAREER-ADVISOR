@@ -2,8 +2,8 @@ import { describe, it, expect } from 'vitest';
 import {
   buildRequirements, createGoalSession, missingFields, interviewComplete, validateValue, applyValues, buildMissionMap,
   GoalSpec, GoalEvidence, MAX_INTERVIEW_QUESTIONS
-} from '../../packages/engine/src/goal-path.js';
-import { createEmptyStudentProfile } from '../../packages/client/src/lib/profile.js';
+} from '../../engine/src/goal-path.js';
+import { createEmptyStudentProfile } from '../../frontend/src/lib/profile.js';
 
 const iit: GoalSpec = { text: 'CSE at IIT Madras', shape: 'ADMISSION', title: 'CSE at IIT Madras', institution: 'IIT Madras', program: 'CSE', exam: 'JEE' };
 const iitEv: GoalEvidence = { sources: [{ title: 'jee', url: 'https://jeeadv.ac.in' }], admission: { exam: 'JEE Advanced', subjects: ['Physics', 'Chemistry', 'Mathematics'], minBoardPercent: 75, sources: [{ title: 'jee', url: 'https://jeeadv.ac.in' }] } };

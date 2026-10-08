@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
-import { computeRiasecCosineSimilarity } from '../../packages/engine/src/riasec-similarity.js';
-import { RIASECScores } from '../../packages/shared/src/types/student.js';
+import { computeRiasecCosineSimilarity } from '../../engine/src/riasec-similarity.js';
+import { RIASECScores } from '../../shared/src/types/student.js';
 
 describe('RIASEC Holland Interest Matching (Cosine Similarity)', () => {
   it('yields 100% fit for identical RIASEC interest vectors', () => {

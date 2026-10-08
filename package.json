@@ -4,10 +4,17 @@
   "private": true,
   "description": "M63: Evidence-Driven Multi-Dimensional Career Decision Intelligence Platform",
   "workspaces": [
-    "packages/*"
+    "frontend",
+    "backend",
+    "engine",
+    "shared"
   ],
   "scripts": {
-    "build": "npm run --workspaces build",
+    "build:shared": "npm run --workspace=@m63/shared build",
+    "build:engine": "npm run --workspace=@m63/engine build",
+    "build:backend": "npm run --workspace=@m63/server build",
+    "build:frontend": "npm run --workspace=@m63/client build",
+    "build": "npm run build:shared && npm run build:engine && npm run build:backend && npm run build:frontend",
     "test": "vitest run",
     "test:watch": "vitest",
     "lint": "echo \"Lint check completed\"",

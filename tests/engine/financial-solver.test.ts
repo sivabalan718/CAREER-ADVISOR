@@ -1,8 +1,8 @@
 import { describe, it, expect } from 'vitest';
-import { FinancialConstraintSolver } from '../../packages/engine/src/financial-solver.js';
-import { Opportunity } from '../../packages/shared/src/types/opportunity.js';
-import { ParentProfile } from '../../packages/shared/src/types/parent.js';
-import { StudentProfile } from '../../packages/shared/src/types/student.js';
+import { FinancialConstraintSolver } from '../../engine/src/financial-solver.js';
+import { Opportunity } from '../../shared/src/types/opportunity.js';
+import { ParentProfile } from '../../shared/src/types/parent.js';
+import { StudentProfile } from '../../shared/src/types/student.js';
 
 describe('Financial Constraint Solver', () => {
   const solver = new FinancialConstraintSolver();

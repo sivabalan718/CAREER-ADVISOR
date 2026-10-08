@@ -5,7 +5,11 @@ node_modules/
 
 # Build outputs
 dist/
+**/dist/
 build/
+**/build/
+*.tsbuildinfo
+**/*.tsbuildinfo
 .next/
 out/
 
@@ -13,6 +17,12 @@ out/
 .env
 .env.*
 !.env.example
+frontend/.env
+frontend/.env.*
+!frontend/.env.example
+backend/.env
+backend/.env.*
+!backend/.env.example
 packages/*/.env
 packages/*/.env.*
 !packages/*/.env.example

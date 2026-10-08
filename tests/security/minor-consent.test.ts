@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { MinorConsentService } from '../../packages/server/src/auth/minor-consent.js';
+import { MinorConsentService } from '../../backend/src/auth/minor-consent.js';
 
 describe('Minor Consent & Age Verification Gate', () => {
   const service = new MinorConsentService();

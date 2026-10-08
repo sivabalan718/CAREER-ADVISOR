@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { computeRocWeights } from '../../packages/engine/src/roc-weights.js';
+import { computeRocWeights } from '../../engine/src/roc-weights.js';
 
 describe('Rank Order Centroid (ROC) Preference Weighting', () => {
   it('calculates mathematically valid weights summing to 1.0 for 5 dimensions', () => {

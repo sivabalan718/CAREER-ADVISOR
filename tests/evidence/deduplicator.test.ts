@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { OpportunityDeduplicator } from '../../packages/server/src/evidence/deduplicator.js';
+import { OpportunityDeduplicator } from '../../backend/src/evidence/deduplicator.js';
 import { Opportunity } from '@m63/shared';
 
 describe('OpportunityDeduplicator — Multi-Source Deduplication & Quality Retention', () => {
