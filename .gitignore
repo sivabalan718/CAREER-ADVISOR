@@ -51,3 +51,6 @@ Thumbs.db
 # Vercel build placeholder output
 backend/public/
 .vercel/
+
+# Generated Vercel bundle (built during deploy)
+backend/app.js

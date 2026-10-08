@@ -189,6 +189,15 @@ export class DisruptionIndex {
         // Dataset unavailable → every lookup returns null (honest INSUFFICIENT).
       }
     }
+    if (!this.dataset) {
+      try {
+        // Static path (server/{src,dist}/market → backend/data) so the deployment bundle embeds the dataset.
+        // eslint-disable-next-line @typescript-eslint/no-require-imports
+        this.dataset = require('../../../data/disruption/ilo_genai_exposure_isco08.json') as IloDataset;
+      } catch {
+        // Dataset unavailable → every lookup returns null (honest INSUFFICIENT).
+      }
+    }
     if (this.dataset) {
       this.prepared = this.dataset.occupations.map(occ => ({
         occ,
