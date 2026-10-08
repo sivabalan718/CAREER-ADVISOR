@@ -47,3 +47,7 @@ Thumbs.db
 # Local evidence cache
 .cache/
 *.xlsx
+
+# Vercel build placeholder output
+backend/public/
+.vercel/

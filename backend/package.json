@@ -1,0 +1,20 @@
+{
+  "name": "m63-backend",
+  "version": "0.1.0",
+  "private": true,
+  "description": "M63 backend deployment workspace (shared -> engine -> server)",
+  "workspaces": [
+    "shared",
+    "engine",
+    "server"
+  ],
+  "scripts": {
+    "build": "npm run build -w @m63/shared && npm run build -w @m63/engine && npm run build -w @m63/server && node -e \"require('fs').mkdirSync('public',{recursive:true})\"",
+    "dev": "npm run dev -w @m63/server",
+    "start": "npm run start -w @m63/server"
+  },
+  "devDependencies": {
+    "@types/node": "^22.13.0",
+    "typescript": "^5.7.0"
+  }
+}

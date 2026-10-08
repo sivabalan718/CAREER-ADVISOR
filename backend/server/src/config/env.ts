@@ -4,8 +4,11 @@ import path from 'node:path';
 import { REPO_ROOT } from './paths.js';
 
 // Load the monorepo root .env regardless of the working directory the server is started from.
-// Server secrets live in the repo-root .env; fall back to a .env where the server is started.
+// Server secrets live in the repo-root .env (locally). On Vercel they come from project env vars.
+// REPO_ROOT may resolve to backend/ (its own workspace), so also look one level up.
 dotenv.config({ path: path.join(REPO_ROOT, '.env') });
+dotenv.config({ path: path.join(REPO_ROOT, '..', '.env') });
+dotenv.config({ path: path.resolve(process.cwd(), '..', '..', '.env') });
 dotenv.config({ path: path.resolve(process.cwd(), '.env') });
 dotenv.config({ path: path.resolve(process.cwd(), '..', '.env') });
 
