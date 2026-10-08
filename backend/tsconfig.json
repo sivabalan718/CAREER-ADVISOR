@@ -6,5 +6,7 @@
     "declarationMap": false,
     "sourceMap": false
   },
-  "include": ["api/**/*.ts"]
+  "include": [
+    "index.ts"
+  ]
 }
