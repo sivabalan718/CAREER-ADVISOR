@@ -15,19 +15,33 @@ npm run dev:server   # API on :4000
 npm run dev:client   # Web on :5173
 ```
 
-1. Copy `.env.example` → `.env` (Adzuna, Supabase service role, Gemini) and `packages/client/.env.example` → `packages/client/.env.local` (Supabase URL + anon key).
-2. **Supabase:** open SQL Editor → paste `supabase/schema.sql` → Run. (Optional for demos: Auth → Providers → Email → turn off “Confirm email”.)
+1. Copy `.env.example` → `.env` (Adzuna, Supabase service role, Gemini) and `frontend/.env.example` → `frontend/.env.local` (Supabase URL + anon key).
+2. **Supabase:** open SQL Editor → paste `backend/supabase/schema.sql` → Run. (Optional for demos: Auth → Providers → Email → turn off “Confirm email”.)
    Until the tables exist, the app stores data in the browser and shows a banner.
+
+## Folder structure
+```
+VIT/
+├── frontend/            React app            → deploy to Vercel/Netlify (root: frontend, build: npm run build, output: dist)
+└── backend/
+    ├── server/          Express API          → deploy to Render/Railway
+    ├── engine/          Decision engine (used by server)
+    ├── shared/          Types used by server + frontend
+    ├── data/            ILO GenAI exposure dataset
+    └── supabase/        SQL (schema.sql, goals.sql)
+.env                     Server secrets at the repo root (template: backend/.env.example)
+```
+Frontend env: `frontend/.env.local` (from `frontend/.env.example`).
 
 ## Architecture
 
 | Layer | What it does | Where |
 |---|---|---|
-| Evidence | Adzuna live jobs, salary history/histogram, top employers; ILO 2025 GenAI exposure (ISCO-08); OpenStreetMap + Wikipedia (hyper-local); Wikidata (institutions); official NSP/AICTE pages (scholarships) | `packages/server/src/{evidence,market,hyperlocal,education}` |
-| Decision engine (judge) | 7-D fit (RIASEC cosine, evidence-weighted skills, 4-axis work style), hard constraints, Financial Constraint Solver, Parent–Student Conflict Index, ROC-weighted multi-objective ADIE ranking, confidence, SWOT, roadmap, What-If, country comparison, change detection, adaptive aptitude test (2PL IRT + EAP) | `packages/engine/src` |
-| Agent (executor) | Intent → live job search / What-If rerun / page-grounded lookup → explanation | `packages/server/src/ai/agent.ts` |
-| LLM (communicator) | Gemini, grounded only in engine output; deterministic explainer fallback; UI translation (Tamil, Hindi, Telugu, Kannada, Malayalam) | `packages/server/src/ai` |
-| Experience | React + Framer Motion + React-Three-Fiber (3D glass prism), Supabase auth & records | `packages/client/src` |
+| Evidence | Adzuna live jobs, salary history/histogram, top employers; ILO 2025 GenAI exposure (ISCO-08); OpenStreetMap + Wikipedia (hyper-local); Wikidata (institutions); official NSP/AICTE pages (scholarships) | `backend/server/src/{evidence,market,hyperlocal,education}` |
+| Decision engine (judge) | 7-D fit (RIASEC cosine, evidence-weighted skills, 4-axis work style), hard constraints, Financial Constraint Solver, Parent–Student Conflict Index, ROC-weighted multi-objective ADIE ranking, confidence, SWOT, roadmap, What-If, country comparison, change detection, adaptive aptitude test (2PL IRT + EAP) | `backend/engine/src` |
+| Agent (executor) | Intent → live job search / What-If rerun / page-grounded lookup → explanation | `backend/server/src/ai/agent.ts` |
+| LLM (communicator) | Gemini, grounded only in engine output; deterministic explainer fallback; UI translation (Tamil, Hindi, Telugu, Kannada, Malayalam) | `backend/server/src/ai` |
+| Experience | React + Framer Motion + React-Three-Fiber (3D glass prism), Supabase auth & records | `frontend/src` |
 
 ### Key formulas
 - **Score** = Σ wₖ·Oₖ / Σ wₖ over objectives *with evidence* (fit, demand, affordability, stability, earnings, location); w from Rank Order Centroid; hard-constraint failure caps the score at min(42, 0.45·Score).

@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { EvidenceCacheService } from '../../backend/src/evidence/cache.service.js';
+import { EvidenceCacheService } from '../../backend/server/src/evidence/cache.service.js';
 
 describe('EvidenceCacheService — Freshness Policies & Invalidation', () => {
   it('stores and retrieves fresh evidence within TTL', () => {

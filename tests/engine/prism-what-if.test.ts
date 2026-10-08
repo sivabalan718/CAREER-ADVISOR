@@ -1,11 +1,11 @@
 import { describe, it, expect } from 'vitest';
-import { PrismDecisionEngine } from '../../engine/src/prism-engine.js';
-import { WhatIfEngine } from '../../engine/src/what-if-engine.js';
-import { computeRocWeights } from '../../engine/src/roc-weights.js';
-import { StudentProfile } from '../../shared/src/types/student.js';
-import { ParentProfile } from '../../shared/src/types/parent.js';
-import { Opportunity } from '../../shared/src/types/opportunity.js';
-import { WhatIfScenario } from '../../shared/src/types/what-if.js';
+import { PrismDecisionEngine } from '../../backend/engine/src/prism-engine.js';
+import { WhatIfEngine } from '../../backend/engine/src/what-if-engine.js';
+import { computeRocWeights } from '../../backend/engine/src/roc-weights.js';
+import { StudentProfile } from '../../backend/shared/src/types/student.js';
+import { ParentProfile } from '../../backend/shared/src/types/parent.js';
+import { Opportunity } from '../../backend/shared/src/types/opportunity.js';
+import { WhatIfScenario } from '../../backend/shared/src/types/what-if.js';
 
 describe('PRISM Decision Engine & What-If Simulation', () => {
   const prismEngine = new PrismDecisionEngine();

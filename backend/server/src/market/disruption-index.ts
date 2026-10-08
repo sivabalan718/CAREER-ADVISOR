@@ -172,7 +172,8 @@ export class DisruptionIndex {
   constructor(datasetPath?: string) {
     const candidates = [
       datasetPath,
-      path.join(REPO_ROOT, 'data', 'disruption', 'ilo_genai_exposure_isco08.json'),
+      path.join(REPO_ROOT, 'backend', 'data', 'disruption', 'ilo_genai_exposure_isco08.json'),
+      path.resolve(process.cwd(), '..', 'data', 'disruption', 'ilo_genai_exposure_isco08.json'),
       path.resolve(process.cwd(), 'data/disruption/ilo_genai_exposure_isco08.json')
     ].filter((p): p is string => Boolean(p));
     for (const p of candidates) {

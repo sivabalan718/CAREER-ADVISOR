@@ -4,8 +4,10 @@ import path from 'node:path';
 import { REPO_ROOT } from './paths.js';
 
 // Load the monorepo root .env regardless of the working directory the server is started from.
+// Server secrets live in the repo-root .env; fall back to a .env where the server is started.
 dotenv.config({ path: path.join(REPO_ROOT, '.env') });
-dotenv.config();
+dotenv.config({ path: path.resolve(process.cwd(), '.env') });
+dotenv.config({ path: path.resolve(process.cwd(), '..', '.env') });
 
 const envSchema = z.object({
   PORT: z.string().default('4000').transform(val => parseInt(val, 10)),

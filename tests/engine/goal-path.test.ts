@@ -2,7 +2,7 @@ import { describe, it, expect } from 'vitest';
 import {
   buildRequirements, createGoalSession, missingFields, interviewComplete, validateValue, applyValues, buildMissionMap,
   GoalSpec, GoalEvidence, MAX_INTERVIEW_QUESTIONS
-} from '../../engine/src/goal-path.js';
+} from '../../backend/engine/src/goal-path.js';
 import { createEmptyStudentProfile } from '../../frontend/src/lib/profile.js';
 
 const iit: GoalSpec = { text: 'CSE at IIT Madras', shape: 'ADMISSION', title: 'CSE at IIT Madras', institution: 'IIT Madras', program: 'CSE', exam: 'JEE' };

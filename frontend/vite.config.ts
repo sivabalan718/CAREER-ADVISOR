@@ -6,7 +6,7 @@ export default defineConfig({
   plugins: [react()],
   resolve: {
     // Use the shared package's TypeScript source directly (ESM) instead of its CommonJS build.
-    alias: { '@m63/shared': path.resolve(__dirname, '../shared/src/index.ts') }
+    alias: { '@m63/shared': path.resolve(__dirname, '../backend/shared/src/index.ts') }
   },
   server: {
     port: 5173,

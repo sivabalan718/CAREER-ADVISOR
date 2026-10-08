@@ -5,7 +5,7 @@
   },
   "files": [],
   "references": [
-    { "path": "./shared" },
-    { "path": "./engine" }
+    { "path": "./backend/shared" },
+    { "path": "./backend/engine" }
   ]
 }

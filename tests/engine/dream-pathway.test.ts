@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { DreamPathwayService } from '../../engine/src/dream-pathway.js';
+import { DreamPathwayService } from '../../backend/engine/src/dream-pathway.js';
 import { StudentProfile, ParentProfile, Opportunity } from '@m63/shared';
 
 describe('Dream Pathway Service — Target Career Readiness & Roadmap', () => {

@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest';
-import { ParentStudentConflictIndexCalculator } from '../../engine/src/conflict-index.js';
-import { StudentProfile } from '../../shared/src/types/student.js';
-import { ParentProfile } from '../../shared/src/types/parent.js';
+import { ParentStudentConflictIndexCalculator } from '../../backend/engine/src/conflict-index.js';
+import { StudentProfile } from '../../backend/shared/src/types/student.js';
+import { ParentProfile } from '../../backend/shared/src/types/parent.js';
 
 describe('Parent-Student Conflict Index (PCI) Calculator', () => {
   const calculator = new ParentStudentConflictIndexCalculator();

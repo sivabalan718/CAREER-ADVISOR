@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { 
   AdaptiveDecisionIntelligenceEngine 
-} from '../../engine/src/adie-engine.js';
+} from '../../backend/engine/src/adie-engine.js';
 import { 
   StudentProfile, 
   ParentProfile, 

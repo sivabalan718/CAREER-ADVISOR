@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { AdaptiveAptitudeAssessment, eapEstimate, irtProbability } from '../../engine/src/adaptive-assessment.js';
+import { AdaptiveAptitudeAssessment, eapEstimate, irtProbability } from '../../backend/engine/src/adaptive-assessment.js';
 
 describe('Adaptive aptitude assessment (2PL IRT + EAP)', () => {
   const cat = new AdaptiveAptitudeAssessment();

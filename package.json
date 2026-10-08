@@ -5,9 +5,9 @@
   "description": "M63: Evidence-Driven Multi-Dimensional Career Decision Intelligence Platform",
   "workspaces": [
     "frontend",
-    "backend",
-    "engine",
-    "shared"
+    "backend/shared",
+    "backend/engine",
+    "backend/server"
   ],
   "scripts": {
     "build:shared": "npm run --workspace=@m63/shared build",
