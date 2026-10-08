@@ -13,6 +13,9 @@
     "dev": "npm run dev -w @m63/server",
     "start": "npm run start -w @m63/server"
   },
+  "dependencies": {
+    "@m63/server": "*"
+  },
   "devDependencies": {
     "@types/node": "^22.13.0",
     "typescript": "^5.7.0"
