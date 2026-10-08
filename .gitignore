@@ -52,3 +52,6 @@ Thumbs.db
 backend/public/
 .vercel/
 
+
+# Generated Vercel Express bundle (built during deploy)
+backend/deploy/
