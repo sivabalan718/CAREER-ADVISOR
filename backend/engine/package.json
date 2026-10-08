@@ -12,6 +12,7 @@
     "@m63/shared": "*"
   },
   "devDependencies": {
-    "typescript": "^5.7.0"
+    "typescript": "^5.7.0",
+    "@types/node": "^22.13.0"
   }
 }
